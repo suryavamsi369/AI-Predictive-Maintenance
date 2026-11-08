@@ -1,4 +1,5 @@
 
+
 """Configuration module for loading and managing environment variables."""
 
 from pathlib import Path
@@ -23,7 +24,11 @@ class Settings(BaseSettings):
 
     # Path to the serialized ML model artifact
     MODEL_PATH: str = str(
-        BASE_DIR / "app" / "ml" / "models" / "predictive_maintenance_rf.joblib"
+        BASE_DIR
+        / "app"
+        / "ml"
+        / "models"
+        / "predictive_maintenance_rf.joblib"
     )
 
     # Database configuration
@@ -51,19 +56,28 @@ class Settings(BaseSettings):
         return path
 
     def get_database_url(self) -> str:
-        """Return a SQLAlchemy database URL using the psycopg2 driver."""
+        """Return a SQLAlchemy URL using the psycopg2 PostgreSQL driver."""
 
         if self.DATABASE_URL:
             url = self.DATABASE_URL.strip()
 
-            # Normalize PostgreSQL URLs for psycopg2
-            if url.startswith("postgres://"):
+            # Convert psycopg v3 URL to psycopg2
+            if url.startswith("postgresql+psycopg://"):
+                url = url.replace(
+                    "postgresql+psycopg://",
+                    "postgresql+psycopg2://",
+                    1,
+                )
+
+            # Convert legacy PostgreSQL URL
+            elif url.startswith("postgres://"):
                 url = url.replace(
                     "postgres://",
                     "postgresql+psycopg2://",
                     1,
                 )
 
+            # Convert standard PostgreSQL URL
             elif url.startswith("postgresql://"):
                 url = url.replace(
                     "postgresql://",
@@ -79,5 +93,7 @@ class Settings(BaseSettings):
             f"{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         )
 
+
+# Application settings instance
 settings = Settings()
 
